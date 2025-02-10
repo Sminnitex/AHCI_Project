@@ -1,0 +1,10 @@
+.conda/
+__pycache__/
+.vscode/
+prerecorded.mp4
+anger.mp4
+OpenFace_2.2.0_win_x64/
+audio.wav
+GazeTracking/
+node_modules/
+studioassistant/
