@@ -6,3 +6,19 @@ To install dependencies
 ```
 conda env create -f studioassistant.yaml
 ```
+
+To run the analysis between openface and deepface
+```
+python ./analysis.py
+```
+To run the analysis on accuracy for deepface emotion detection
+```
+python ./emotion_analysis.py
+```
+
+To run the StudioAssistant demo app
+```
+python ./main.py
+cd studioassistant
+serve -s build
+```

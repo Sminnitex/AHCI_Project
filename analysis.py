@@ -3,11 +3,11 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import cv2, collections
 import pandas as pd
 from deepface import DeepFace as deepface
-from my_functions import concentration_index, gaze_analysis, map_emotion_to_AU, process_openface_gaze, compare_gaze_estimations
+from my_functions import concentration_index, gaze_analysis, map_emotion_to_AU, process_openface_gaze, compare_gaze_estimations, plot_au_over_time
 import matplotlib.pyplot as plt
 
 video_capture = cv2.VideoCapture("./prerecorded.mp4")
-fps = video_capture.get(cv2.CAP_PROP_FPS)      # OpenCV v2.x used "CV_CAP_PROP_FPS"
+fps = video_capture.get(cv2.CAP_PROP_FPS)      
 frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 duration = int(frame_count/fps)
 WINDOW_SIZE = 60
@@ -31,7 +31,7 @@ while True:
         
         try:
             # Detect face and extract features using DeepFace
-            detections = deepface.analyze(frame, actions=['emotion'], enforce_detection=False)
+            detections = deepface.analyze(frame, actions=['emotion'], enforce_detection=False, detector_backend="skip")
             if detections:
                 bbox = detections[0]['region']
                 emotion = detections[0]['dominant_emotion']
@@ -131,7 +131,7 @@ file_path = os.path.join(dir_path, 'prerecorded.csv')
 #plot_hist(au_nnz, "anger")
 #plot_au_int(au_int, "prerecorded")
 
-#plot_au_over_time(dir_path, "anger")
+plot_au_over_time(dir_path, "prerecorded")
 
 #Deepface
 # Load OpenFace AU data
@@ -143,8 +143,10 @@ au_columns = [col for col in openface_df.columns if col.endswith('_c')]
 # Apply AU mapping to DeepFace emotions and expand into separate columns
 deepface_au_df = deepface_df["emotion"].apply(map_emotion_to_AU).apply(pd.Series)
 deepface_au_df = deepface_au_df[au_columns]
+deepface_au_df.to_csv("deepface_emotions_au.csv", index=False)
 
 # Compute correlation between OpenFace AU classifications and DeepFace AU mappings
+plot_au_over_time(os.getcwd(), "deepface_emotions_au")
 correlations = openface_df[au_columns].corrwith(deepface_au_df)
 au_45 = openface_df[au_columns].iloc[:, -1]
 
@@ -231,7 +233,9 @@ deepface_common_au = deepface_common_au[au_columns]
 
 
 aggregated_df = aggregated_df.iloc[:-1]  
-
+plot_au_over_time(os.getcwd(), "openface_aggregated")
+deepface_common_au.to_csv("deepface_timewindow.csv", index=False)
+plot_au_over_time(os.getcwd(), "deepface_timewindow")
 correlations = aggregated_df[au_columns].corrwith(deepface_common_au)
 au_45_agg = aggregated_df[au_columns].iloc[:, -1]
 

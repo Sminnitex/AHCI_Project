@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 gaze = GazeTracking()
-TIME_WINDOW_SIZE = 30
+TIME_WINDOW_SIZE = 60
 frame_counter = 0
 
 # Video capture object
@@ -86,7 +86,7 @@ def generate_frames():
             # Process the DeepFace analysis only in defined time windows
             if frame_counter % TIME_WINDOW_SIZE == 0:
                 # Detect face and extract features using DeepFace
-                detections = deepface.analyze(frame, actions=['emotion'], enforce_detection=False)
+                detections = deepface.analyze(frame, actions=['emotion'], enforce_detection=False, detector_backend="skip")
                 if detections:
                     bbox = detections[0]['region']
                     emotion = detections[0]['dominant_emotion']

@@ -15,6 +15,10 @@ emotion_weights = {
     'neutral': 0.9
 }
 
+all_AUs_c = {' AU01_c', ' AU02_c', ' AU04_c', ' AU05_c', ' AU06_c', ' AU07_c', ' AU09_c', 
+                ' AU10_c', ' AU12_c', ' AU14_c', ' AU15_c', ' AU17_c', ' AU20_c', ' AU23_c', 
+                ' AU25_c', ' AU26_c', ' AU28_c', ' AU45_c'}
+
 gaze = GazeTracking()
 
 def eucledian_distance(pt1, pt2):
@@ -36,7 +40,7 @@ def concentration_index(emotion, gaze_weights):
     emotion_score = emotion_weights.get(emotion, 0.5)  # Default to 0.5 if emotion not found
 
     # Calculate the concentration index as a weighted sum of emotion and gaze
-    concentration = (emotion_score + gaze_weights) / 5.0  # Percentage of scores
+    concentration = (emotion_score + gaze_weights) / 6.0  # Percentage of scores
 
     return concentration
 
@@ -118,29 +122,72 @@ def plot_au_int(au_int, expression, bins=10):
 
 def plot_au_over_time(dir_path, expression_name):
     file_path = os.path.join(dir_path, f'{expression_name}.csv')
-    df = pd.read_csv(file_path)    
-    au_numb = 17
+    
+    # Load CSV
+    df = pd.read_csv(file_path)
 
-    au_data = df.iloc[:, -au_numb:]    
+    # Extract relevant AUs
+    au_columns = [col for col in df.columns if col in all_AUs_c]
+    if not au_columns:
+        print(f"No matching AUs found in {file_path}")
+        return
     
-    plt.figure(figsize=(12, 8))
+    au_data = df[au_columns]
+
+    # Normalize AU activations
+    rolling_window = 10  
+    au_data_normalized = au_data.rolling(window=rolling_window, min_periods=1).mean()
+
+    fig, ax = plt.subplots(figsize=(12, 8))
     
-    for i in range(au_numb):
-        plt.plot(df.index, au_data.iloc[:, i], label=f'AU{i+1}')
+    # Dictionary to store line objects
+    lines = {}
     
-    plt.title(f'AU Intensities Over Time - {expression_name.capitalize()}')
+    # Plot each AU over time and store the line object
+    for au in au_columns:
+        line, = ax.plot(df.index, au_data_normalized[au], label=au.strip(), picker=True, linewidth=1.5)
+        lines[au.strip()] = line  # Store the line reference
+    
+    # Add legend
+    legend = ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
+
+    # Store legend entries for interaction
+    legend_lines = legend.get_lines()
+    highlighted_au = None  
+
+    # Define event handler for clicking on legend
+    def on_legend_click(event):
+        nonlocal highlighted_au  # Access the global variable
+        
+        legend_line = event.artist  # Get the legend line that was clicked
+        label = legend_line.get_label()  # Get the corresponding AU label
+        
+        if label in lines:
+            if highlighted_au == label:
+                # If clicked again, show all lines
+                for line in lines.values():
+                    line.set_visible(True)
+                highlighted_au = None  # Reset
+            else:
+                # Hide all lines except the selected one
+                for au, line in lines.items():
+                    line.set_visible(au == label)
+                highlighted_au = label  # Store the current highlighted AU
+            
+            # Refresh plot
+            fig.canvas.draw()
+
+    # Connect event handler
+    fig.canvas.mpl_connect('pick_event', on_legend_click)
+
+    # Show plot
+    plt.title(f'Normalized AU Activations Over Time - {expression_name.capitalize()}')
     plt.xlabel('Frame Number')
-    plt.ylabel('AU Intensity')
-    plt.legend(loc='upper right', bbox_to_anchor=(1.2, 1))  
-    plt.tight_layout() 
-    #plt.savefig(f'{expression_name}_au_histogram.png')
+    plt.ylabel('Normalized AU Activation')
+    plt.tight_layout()
     plt.show()
     
 def map_emotion_to_AU(emotion):
-    all_AUs_c = {' AU01_c', ' AU02_c', ' AU04_c', ' AU05_c', ' AU06_c', ' AU07_c', ' AU09_c', 
-                 ' AU10_c', ' AU12_c', ' AU14_c', ' AU15_c', ' AU17_c', ' AU20_c', ' AU23_c', 
-                 ' AU25_c', ' AU26_c', ' AU28_c', ' AU45_c'}
-
     mapping = {
         'happy': {' AU06_c': 1, ' AU12_c': 1, ' AU25_c': 1},
         'angry': {' AU04_c': 1, ' AU05_c': 1, ' AU07_c': 1, ' AU10_c': 1, ' AU17_c': 1, 
@@ -221,4 +268,3 @@ def compare_gaze_estimations(openface_gaze_x, openface_gaze_y, au_45, gaze_track
     accuracy = match_count / len(gaze_df)
 
     print(f"🔍 OpenFace_right vs. GazeTracking Accuracy: {accuracy * 100:.2f}%")
-
