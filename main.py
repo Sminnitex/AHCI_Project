@@ -56,7 +56,7 @@ def generate_image():
     
     # Generate image
     neg_prompt = "ugly, blurry, poor quality, deformed structure, very bad lighting, bad colouring, noise"
-    image = pipe(prompt=prompt, negative_prompt=neg_prompt, num_inference_steps=5, height=256, width=256).images[0]
+    image = pipe(prompt=prompt, negative_prompt=neg_prompt, num_inference_steps=10, height=256, width=256).images[0]
     
     # Convert image to base64 for frontend display
     buffered = BytesIO()

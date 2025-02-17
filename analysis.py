@@ -6,7 +6,7 @@ from deepface import DeepFace as deepface
 from my_functions import concentration_index, gaze_analysis, map_emotion_to_AU, process_openface_gaze, compare_gaze_estimations, plot_au_over_time
 import matplotlib.pyplot as plt
 
-video_capture = cv2.VideoCapture("./prerecorded.mp4")
+video_capture = cv2.VideoCapture("./anger.mp4")
 fps = video_capture.get(cv2.CAP_PROP_FPS)      
 frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 duration = int(frame_count/fps)
@@ -126,12 +126,12 @@ video_capture.release()
 cv2.destroyAllWindows()
     
 dir_path = os.getcwd() + '\\OpenFace_2.2.0_win_x64\\processed'
-file_path = os.path.join(dir_path, 'prerecorded.csv')
+file_path = os.path.join(dir_path, 'anger.csv')
 #au_nnz, au_int = process_au(file_path)
 #plot_hist(au_nnz, "anger")
 #plot_au_int(au_int, "prerecorded")
 
-plot_au_over_time(dir_path, "prerecorded")
+plot_au_over_time(dir_path, "anger")
 
 #Deepface
 # Load OpenFace AU data
